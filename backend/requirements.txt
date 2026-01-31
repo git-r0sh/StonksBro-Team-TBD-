@@ -1,0 +1,11 @@
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+sqlalchemy==2.0.25
+pandas==2.2.0
+yfinance==0.2.35
+pydantic==2.5.3
+python-multipart==0.0.6
+cachetools==6.2.6
+numpy
+python-jose[cryptography]
+passlib[bcrypt]

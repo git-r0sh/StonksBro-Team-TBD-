@@ -1,0 +1,364 @@
+@import "tailwindcss";
+
+:root {
+  /* Bloomberg Terminal Color Palette */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-tertiary: #1a1a1a;
+  --bg-card: #141414;
+  --border-primary: #2a2a2a;
+  --border-glow: #333333;
+
+  /* Neon Accent Colors */
+  --neon-green: #00ff88;
+  --neon-red: #ff3366;
+  --neon-yellow: #ffcc00;
+  --neon-cyan: #00ccff;
+  --neon-purple: #9966ff;
+  --neon-orange: #ff9900;
+
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+
+  /* Status Colors */
+  --positive: #00ff88;
+  --negative: #ff3366;
+  --neutral: #888888;
+
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+}
+
+/* Terminal-style scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-green);
+}
+
+/* Bloomberg Terminal Card */
+.terminal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  box-shadow: 0 0 1px rgba(0, 255, 136, 0.1);
+}
+
+.terminal-card:hover {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+}
+
+/* Neon Glow Effects */
+.glow-positive {
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  color: var(--neon-green);
+}
+
+.glow-negative {
+  text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+  color: var(--neon-red);
+}
+
+.glow-neutral {
+  text-shadow: 0 0 10px rgba(136, 136, 136, 0.3);
+  color: var(--text-secondary);
+}
+
+/* Price display styling */
+.price-up {
+  color: var(--neon-green);
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), transparent);
+}
+
+.price-down {
+  color: var(--neon-red);
+  background: linear-gradient(135deg, rgba(255, 51, 102, 0.1), transparent);
+}
+
+/* Terminal Header Style */
+.terminal-header {
+  background: linear-gradient(90deg, var(--bg-tertiary), var(--bg-secondary));
+  border-bottom: 1px solid var(--border-primary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+/* Bloomberg-style data grid */
+.data-grid {
+  display: grid;
+  gap: 1px;
+  background: var(--border-primary);
+}
+
+.data-cell {
+  background: var(--bg-card);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.data-cell-header {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* Ticker tape / Marquee */
+.ticker-tape {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary);
+  overflow: hidden;
+}
+
+.ticker-content {
+  display: flex;
+  animation: ticker-scroll 30s linear infinite;
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Sector Heatmap */
+.heatmap-cell {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+/* Alert Badge */
+.alert-badge {
+  animation: pulse-alert 2s infinite;
+}
+
+@keyframes pulse-alert {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Chart container */
+.chart-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  position: relative;
+}
+
+.chart-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 90%, var(--bg-card) 100%);
+}
+
+/* Indicator pills */
+.indicator-bullish {
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--neon-green);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.indicator-bearish {
+  background: rgba(255, 51, 102, 0.15);
+  color: var(--neon-red);
+  border: 1px solid rgba(255, 51, 102, 0.3);
+}
+
+.indicator-neutral {
+  background: rgba(136, 136, 136, 0.15);
+  color: var(--text-secondary);
+  border: 1px solid rgba(136, 136, 136, 0.3);
+}
+
+/* Glass effect - Bloomberg style */
+.glass-dark {
+  background: rgba(10, 10, 10, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-primary);
+}
+
+/* Gradient text - neon */
+.gradient-neon {
+  background: linear-gradient(135deg, var(--neon-green), var(--neon-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card hover effects */
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
+  border-color: var(--neon-green);
+}
+
+/* Button styles */
+.btn-terminal {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-terminal:hover {
+  background: var(--neon-green);
+  color: var(--bg-primary);
+  border-color: var(--neon-green);
+}
+
+.btn-terminal.active {
+  background: var(--neon-green);
+  color: var(--bg-primary);
+}
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* RSI/Indicator bars */
+.indicator-bar {
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.indicator-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+/* News impact badges */
+.impact-high {
+  background: rgba(255, 51, 102, 0.2);
+  color: var(--neon-red);
+  border: 1px solid rgba(255, 51, 102, 0.4);
+}
+
+.impact-medium {
+  background: rgba(255, 204, 0, 0.2);
+  color: var(--neon-yellow);
+  border: 1px solid rgba(255, 204, 0, 0.4);
+}
+
+.impact-low {
+  background: rgba(136, 136, 136, 0.2);
+  color: var(--text-secondary);
+  border: 1px solid rgba(136, 136, 136, 0.4);
+}
+
+/* Price Flash Animations */
+.flash-green {
+  animation: flash-green-animation 0.5s ease-out;
+}
+
+.flash-red {
+  animation: flash-red-animation 0.5s ease-out;
+}
+
+@keyframes flash-green-animation {
+  0% {
+    background-color: rgba(0, 255, 136, 0.3);
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+  }
+
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+@keyframes flash-red-animation {
+  0% {
+    background-color: rgba(255, 51, 102, 0.3);
+    box-shadow: 0 0 15px rgba(255, 51, 102, 0.5);
+  }
+
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+/* Additional utility classes */
+.data-cell-header {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+}
+
+/* Smooth transitions for real-time updates */
+.price-transition {
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
