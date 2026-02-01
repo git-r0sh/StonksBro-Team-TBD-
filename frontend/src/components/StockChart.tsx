@@ -114,7 +114,7 @@ export default function StockChart({ ticker = 'NIFTY50', height = 300 }: StockCh
                         fontSize={11}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(value) => new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                        tickFormatter={(value) => new Date(value).toLocaleDateString()}
                     />
                     <YAxis
                         stroke="#64748b"
@@ -122,7 +122,7 @@ export default function StockChart({ ticker = 'NIFTY50', height = 300 }: StockCh
                         tickLine={false}
                         axisLine={false}
                         domain={['dataMin - 100', 'dataMax + 100']}
-                        tickFormatter={(value) => `₹${(value / 1000).toFixed(1)}k`}
+                        tickFormatter={(value) => `₹${(value ?? 0 / 1000).toFixed(1)}k`}
                     />
                     <Tooltip
                         contentStyle={{
@@ -133,7 +133,7 @@ export default function StockChart({ ticker = 'NIFTY50', height = 300 }: StockCh
                         }}
                         labelStyle={{ color: '#94a3b8' }}
                         itemStyle={{ color: isPositive ? '#10b981' : '#ef4444' }}
-                        formatter={(value: number) => [`₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`, 'Price']}
+                        formatter={(value: any) => [`₹${(value ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`, 'Price']}
                         labelFormatter={(label) => new Date(label).toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })}
                     />
                     <Area
