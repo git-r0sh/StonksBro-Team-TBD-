@@ -11,12 +11,7 @@ interface Message {
     timestamp: Date;
 }
 
-const MOCK_RESPONSES: Record<string, string> = {
-    'default': "I'm your AI trading assistant! I can help you understand market concepts, analyze stocks, and explain investment strategies. What would you like to learn about?",
-    'stock': "When analyzing stocks, consider these key factors:\n\n📊 **Fundamentals**: P/E ratio, EPS growth, debt levels\n📈 **Technical Analysis**: Moving averages, RSI, MACD\n📰 **Market Sentiment**: News, analyst ratings, institutional activity\n\nWould you like me to explain any of these in detail?",
-    'risk': "Risk management is crucial for successful trading:\n\n🛡️ **Position Sizing**: Never risk more than 1-2% per trade\n🎯 **Stop Losses**: Always set exit points before entering\n📊 **Diversification**: Spread across sectors and asset classes\n💰 **Portfolio Allocation**: Balance between growth and safety\n\nRemember: Preservation of capital is the first rule of investing!",
-    'nifty': "NIFTY 50 is India's benchmark stock index representing 50 of the largest companies listed on NSE.\n\n🏢 **Composition**: Covers 13 sectors of the economy\n📊 **Weightage**: IT and Financial Services have highest weights\n📈 **Use Cases**: Benchmarking, ETF tracking, derivatives\n\nIt's considered a barometer of the Indian economy!",
-};
+
 
 export default function AIChat() {
     const [messages, setMessages] = useState<Message[]>([
@@ -39,13 +34,7 @@ export default function AIChat() {
         scrollToBottom();
     }, [messages]);
 
-    const getResponse = (query: string): string => {
-        const lowerQuery = query.toLowerCase();
-        if (lowerQuery.includes('stock') || lowerQuery.includes('analyze')) return MOCK_RESPONSES['stock'];
-        if (lowerQuery.includes('risk') || lowerQuery.includes('loss')) return MOCK_RESPONSES['risk'];
-        if (lowerQuery.includes('nifty') || lowerQuery.includes('index')) return MOCK_RESPONSES['nifty'];
-        return MOCK_RESPONSES['default'];
-    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -62,17 +51,33 @@ export default function AIChat() {
         setInput('');
         setIsTyping(true);
 
-        // Simulate AI response delay
-        setTimeout(() => {
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const res = await fetch(`${API_URL}/chat/message`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: userMessage.content })
+            });
+            const data = await res.json();
+
             const response: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: getResponse(input),
+                content: data.response,
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, response]);
+        } catch (error) {
+            const response: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: "I'm having trouble connecting to the server. Please try again.",
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, response]);
+        } finally {
             setIsTyping(false);
-        }, 1000 + Math.random() * 1000);
+        }
     };
 
     return (
@@ -104,14 +109,14 @@ export default function AIChat() {
                             className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
                         >
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${message.role === 'user'
-                                    ? 'bg-emerald-500/20 text-emerald-400'
-                                    : 'bg-purple-500/20 text-purple-400'
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : 'bg-purple-500/20 text-purple-400'
                                 }`}>
                                 {message.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                             </div>
                             <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.role === 'user'
-                                    ? 'bg-emerald-500/20 text-white'
-                                    : 'bg-slate-700/50 text-slate-200'
+                                ? 'bg-emerald-500/20 text-white'
+                                : 'bg-slate-700/50 text-slate-200'
                                 }`}>
                                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                                 <p className="text-xs text-slate-500 mt-2">

@@ -4,24 +4,24 @@ import yfinance as yf
 from datetime import datetime
 import logging
 import random
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 router = APIRouter(prefix="/sentiment", tags=["sentiment"])
 logger = logging.getLogger(__name__)
 
-# Positive and negative words for basic sentiment analysis
-POSITIVE_WORDS = [
-    'up', 'rise', 'gain', 'growth', 'profit', 'surge', 'rally', 'jump', 'boost',
-    'strong', 'bullish', 'optimistic', 'positive', 'record', 'high', 'success',
-    'beat', 'exceed', 'outperform', 'upgrade', 'buy', 'recommend', 'expansion',
-    'dividend', 'earnings', 'revenue', 'increase', 'momentum', 'breakout', 'soar'
-]
-
-NEGATIVE_WORDS = [
-    'down', 'fall', 'drop', 'decline', 'loss', 'plunge', 'crash', 'sink', 'weak',
-    'bearish', 'pessimistic', 'negative', 'low', 'miss', 'fail', 'underperform',
-    'downgrade', 'sell', 'cut', 'layoff', 'debt', 'warning', 'risk', 'concern',
-    'volatile', 'uncertain', 'slump', 'tumble', 'correction', 'recession'
-]
+# Configure Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    model = genai.GenerativeModel('gemini-flash-latest')
+else:
+    logger.warning("GEMINI_API_KEY not found. Falling back to mock data.")
+    model = None
 
 def get_yf_ticker(ticker: str) -> str:
     """Convert ticker to yfinance format"""
@@ -37,101 +37,86 @@ def get_yf_ticker(ticker: str) -> str:
         return "^NSEI"
     return ticker_upper
 
-def analyze_headlines(headlines: list) -> dict:
-    """Analyze sentiment from news headlines"""
+def analyze_headlines_with_gemini(ticker: str, headlines: list) -> dict:
+    """Analyze sentiment from news headlines using Gemini"""
     if not headlines:
-        return {"score": 50, "positive_count": 0, "negative_count": 0, "headlines_analyzed": 0}
+        return {"score": 50, "sentiment": "Neutral", "analysis": f"No recent news found for {ticker}."}
     
-    positive_count = 0
-    negative_count = 0
-    
-    for headline in headlines[:3]:  # Analyze top 3 headlines
-        headline_lower = headline.lower()
+    if not model:
+        return fallback_analysis(headlines)
         
-        for word in POSITIVE_WORDS:
-            if word in headline_lower:
-                positive_count += 1
+    try:
+        prompt = f"""
+        Analyze the sentiment for the stock '{ticker}' based on these news headlines:
+        {headlines}
         
-        for word in NEGATIVE_WORDS:
-            if word in headline_lower:
-                negative_count += 1
+        Return a JSON object with:
+        1. "score": A number between 0 (Extreme Bearish) and 100 (Extreme Bullish). 50 is Neutral.
+        2. "sentiment": One of [Bearish, Slightly Bearish, Neutral, Slightly Bullish, Bullish].
+        3. "analysis": A concise 2-sentence explanation of the sentiment drivers.
+        """
+        
+        response = model.generate_content(prompt)
+        text = response.text.replace('```json', '').replace('```', '').strip()
+        
+        import json
+        result = json.loads(text)
+        return result
+    except Exception as e:
+        logger.error(f"Gemini analysis failed: {e}")
+        return fallback_analysis(headlines)
+
+def fallback_analysis(headlines):
+    """Simple keyword based fallback if Gemini fails"""
+    positive = ['up', 'rise', 'gain', 'growth', 'profit', 'surge', 'strong', 'buy']
+    negative = ['down', 'fall', 'drop', 'loss', 'crash', 'weak', 'sell', 'debt']
     
-    # Calculate score: 50 is neutral, positive words push up, negative push down
-    total_words = positive_count + negative_count
-    if total_words > 0:
-        sentiment_ratio = (positive_count - negative_count) / total_words
-        score = int(50 + (sentiment_ratio * 40))  # Scale to 10-90 range
-    else:
-        score = 50
+    score = 50
+    text = " ".join(headlines).lower()
     
+    for w in positive: 
+        if w in text: score += 5
+    for w in negative:
+        if w in text: score -= 5
+        
     score = max(10, min(90, score))
+    
+    if score >= 60: sentiment = "Bullish"
+    elif score <= 40: sentiment = "Bearish"
+    else: sentiment = "Neutral"
     
     return {
         "score": score,
-        "positive_count": positive_count,
-        "negative_count": negative_count,
-        "headlines_analyzed": min(len(headlines), 3)
+        "sentiment": sentiment,
+        "analysis": "Based on keyword analysis of recent headlines (Gemini unavailable)."
     }
-
-def get_sentiment_label(score: int) -> str:
-    """Convert score to sentiment label"""
-    if score >= 70:
-        return "Bullish"
-    elif score >= 55:
-        return "Slightly Bullish"
-    elif score >= 45:
-        return "Neutral"
-    elif score >= 30:
-        return "Slightly Bearish"
-    else:
-        return "Bearish"
-
-def generate_analysis(ticker: str, score: int, sentiment: str, news_based: bool = False) -> str:
-    """Generate AI analysis text"""
-    source = "Based on recent news headlines, " if news_based else ""
-    analyses = {
-        "Bullish": f"{source}{ticker} shows strong momentum with positive market sentiment. Technical indicators suggest continued upward movement. Institutional buying observed.",
-        "Slightly Bullish": f"{source}{ticker} displays modest strength with cautious optimism. Support levels holding well. Consider accumulating on dips.",
-        "Neutral": f"{source}{ticker} is in a consolidation phase. Mixed signals from technical and fundamental analysis. Wait for clearer direction.",
-        "Slightly Bearish": f"{source}{ticker} shows weakness with selling pressure. Key support levels being tested. Exercise caution with new positions.",
-        "Bearish": f"{source}{ticker} under significant pressure. Breaking key support levels. Consider hedging or reducing exposure.",
-    }
-    return analyses.get(sentiment, analyses["Neutral"])
 
 @router.post("/analyze", response_model=SentimentResponse)
 async def analyze_sentiment(request: SentimentRequest):
-    """Analyze market sentiment for a ticker using yfinance news"""
+    """Analyze market sentiment for a ticker using yfinance news + Gemini"""
     ticker_upper = request.ticker.upper()
     yf_ticker = get_yf_ticker(ticker_upper)
     
-    news_based = False
     headlines = []
     
     try:
         stock = yf.Ticker(yf_ticker)
         news = stock.news
-        
         if news:
             headlines = [item.get('title', '') for item in news[:5]]
-            analysis_result = analyze_headlines(headlines)
-            score = analysis_result["score"]
-            news_based = True
-            logger.info(f"Sentiment for {ticker_upper}: {analysis_result}")
+            result = analyze_headlines_with_gemini(ticker_upper, headlines)
         else:
-            # Fallback to mock with slight randomness
-            score = 50 + random.randint(-15, 15)
+            result = {"score": 50, "sentiment": "Neutral", "analysis": "No recent news found."}
+            
     except Exception as e:
         logger.warning(f"Failed to fetch news for {ticker_upper}: {e}")
-        score = 50 + random.randint(-15, 15)
-    
-    sentiment = get_sentiment_label(score)
-    analysis = generate_analysis(ticker_upper, score, sentiment, news_based)
+        result = {"score": 50, "sentiment": "Neutral", "analysis": "Error analyzing sentiment."}
     
     return SentimentResponse(
         ticker=ticker_upper,
-        score=score,
-        sentiment=sentiment,
-        analysis=analysis
+        score=result.get("score", 50),
+        sentiment=result.get("sentiment", "Neutral"),
+        analysis=result.get("analysis", "No analysis available")
     )
 
 @router.get("/news/{ticker}")

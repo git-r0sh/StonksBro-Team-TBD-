@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import stocks, sentiment, portfolio, analytics, auth
+from routers import stocks, sentiment, portfolio, analytics, auth, chat
 from cache import get_cache_stats, clear_cache
 import models  # Import models to ensure they're registered with Base
 
@@ -35,6 +35,7 @@ app.include_router(stocks.router)
 app.include_router(sentiment.router)
 app.include_router(portfolio.router)
 app.include_router(analytics.router)
+app.include_router(chat.router)
 
 @app.get("/")
 async def root():
