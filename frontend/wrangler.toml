@@ -1,6 +1,6 @@
 #:schema https://raw.githubusercontent.com/cloudflare/wrangler/main/packages/wrangler/config-schema.json
 compatibility_flags = [ "nodejs_compat" ]
-compatibility_date = "2024-09-23"
+compatibility_date = "2026-02-01"
 
 [site]
 bucket = ".vercel/output/static"
