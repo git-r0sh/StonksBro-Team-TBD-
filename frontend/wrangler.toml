@@ -1,6 +1,7 @@
 #:schema https://raw.githubusercontent.com/cloudflare/wrangler/main/packages/wrangler/config-schema.json
+name = "stonksbro-team-tbd"
 compatibility_flags = [ "nodejs_compat" ]
-compatibility_date = "2026-02-01"
+compatibility_date = "2024-09-23"
 
-[site]
-bucket = ".vercel/output/static"
+# This is the line your log says is missing!
+pages_build_output_dir = ".vercel/output/static"
